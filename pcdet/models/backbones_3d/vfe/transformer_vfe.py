@@ -40,21 +40,16 @@ class TransformerVFE(VFETemplate):
     def __init__(self, model_cfg, num_point_features, voxel_size, point_cloud_range, **kwargs):
         super().__init__(model_cfg=model_cfg)
         self.num_point_features = num_point_features
-        self.feature_fc = nn.Linear(7, 16)
-        self.pe = nn.Sequential(
-            nn.Linear(3, 16 // 2),
-            nn.ReLU(),
-            nn.Linear(16 // 2, 16),
-            nn.ReLU()
-            )
-        self.query_embed = nn.Embedding(64, 16)
+        self.feature_fc = nn.Linear(7, 8)
+        self.pe = nn.Linear(3, 8)
+        self.query_embed = nn.Embedding(32, 8)
         self.transformer = nn.Transformer(
-            d_model=16,
+            d_model=8,
             nhead=8,
             num_encoder_layers=1,
             num_decoder_layers=2,
-            dim_feedforward=128)
-        self.fc = GroupWiseLinear(64, 16, bias=True)
+            dim_feedforward=32)
+        self.fc = GroupWiseLinear(32, 8, bias=True)
 
         self.voxel_x = voxel_size[0]
         self.voxel_y = voxel_size[1]

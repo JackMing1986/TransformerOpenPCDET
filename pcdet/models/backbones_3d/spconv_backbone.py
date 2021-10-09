@@ -287,13 +287,13 @@ class VoxelBackBone2x(nn.Module):
         self.model_cfg = model_cfg
         norm_fn = partial(nn.BatchNorm1d, eps=1e-3, momentum=0.01)
 
-        self.sparse_shape = grid_size[::-1] + [1, 0, 0]
+        self.sparse_shape = grid_size[::-1] // 2 + [1, 0, 0]
 
         block = post_act_block
 
         self.conv1 = spconv.SparseSequential(
             # [400, 352, 11] <- [200, 176, 5]
-            block(64, 64, 3, norm_fn=norm_fn, stride=2, padding=(0, 1, 1), indice_key='spconv4', conv_type='spconv'),
+            block(32, 64, 3, norm_fn=norm_fn, stride=2, padding=(0, 1, 1), indice_key='spconv4', conv_type='spconv'),
             block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
             block(64, 64, 3, norm_fn=norm_fn, padding=1, indice_key='subm4'),
         )
@@ -332,8 +332,7 @@ class VoxelBackBone2x(nn.Module):
             spatial_shape=self.sparse_shape,
             batch_size=batch_size
         )
-        x = self.conv_input(input_sp_tensor)
-        x_conv1 = self.conv1(x)
+        x_conv1 = self.conv1(input_sp_tensor)
         # for detection head [200, 176, 5] -> [200, 176, 2]
         out = self.conv_out(x_conv1)
 
@@ -343,15 +342,14 @@ class VoxelBackBone2x(nn.Module):
             spatial_shape=self.sparse_shape,
             batch_size=batch_size
         )
-        x_ext = self.conv_input(input_sp_tensor_ext)
-        x_ext = self.conv1(x_ext)
+        x_ext = self.conv1(input_sp_tensor_ext)
         # for detection head [200, 176, 5] -> [200, 176, 2]
         out_ext = self.conv_out(x_ext)
 
         batch_dict.update({
             'encoded_spconv_tensor': out,
-            'encoded_spconv_tensor': out_ext,
-            'encoded_spconv_tensor_stride': 2
+            'encoded_spconv_tensor_ext': out_ext,
+            'encoded_spconv_tensor_stride': 4
         })
         batch_dict.update({
             'multi_scale_3d_features': {
@@ -360,7 +358,7 @@ class VoxelBackBone2x(nn.Module):
         })
         batch_dict.update({
             'multi_scale_3d_strides': {
-                'x_conv1': 2,
+                'x_conv1': 4,
             }
         })
 
