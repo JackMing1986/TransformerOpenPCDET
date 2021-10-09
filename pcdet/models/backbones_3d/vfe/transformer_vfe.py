@@ -51,8 +51,8 @@ class TransformerVFE(VFETemplate):
         self.transformer = nn.Transformer(
             d_model=16,
             nhead=8,
-            num_encoder_layers=2,
-            num_decoder_layers=4,
+            num_encoder_layers=1,
+            num_decoder_layers=2,
             dim_feedforward=128)
         self.fc = GroupWiseLinear(64, 16, bias=True)
 
